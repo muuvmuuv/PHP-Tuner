@@ -10,7 +10,7 @@ build:
 
 build-all: clean
     #!/usr/bin/env sh
-    for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+    for target in linux/amd64 linux/arm64; do
         os="${target%/*}"
         arch="${target#*/}"
         echo "Building ${os}/${arch}..."

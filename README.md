@@ -9,31 +9,15 @@ A CLI tool that analyzes your system and calculates optimal **FrankenPHP** or **
 Run directly without installing:
 
 ```bash
-# Latest version (FrankenPHP)
+# Linux (amd64)
 curl -fsSL https://github.com/muuvmuuv/php-tuner/releases/latest/download/php-tuner-linux-amd64.tar.gz | tar xz && ./php-tuner
 
-# Specific version
-curl -fsSL https://github.com/muuvmuuv/php-tuner/releases/download/v0.1.0/php-tuner-0.1.0-linux-amd64.tar.gz | tar xz && ./php-tuner
+# Linux (arm64)
+curl -fsSL https://github.com/muuvmuuv/php-tuner/releases/latest/download/php-tuner-linux-arm64.tar.gz | tar xz && ./php-tuner
 
-# PHP-FPM instead
+# PHP-FPM instead of FrankenPHP
 ./php-tuner fpm
 ```
-
-<details>
-<summary>Other platforms</summary>
-
-```bash
-# macOS (Apple Silicon)
-curl -fsSL https://github.com/muuvmuuv/php-tuner/releases/latest/download/php-tuner-darwin-arm64.tar.gz | tar xz && ./php-tuner
-
-# macOS (Intel)
-curl -fsSL https://github.com/muuvmuuv/php-tuner/releases/latest/download/php-tuner-darwin-amd64.tar.gz | tar xz && ./php-tuner
-
-# Linux (ARM64)
-curl -fsSL https://github.com/muuvmuuv/php-tuner/releases/latest/download/php-tuner-linux-arm64.tar.gz | tar xz && ./php-tuner
-```
-
-</details>
 
 ## Usage
 
