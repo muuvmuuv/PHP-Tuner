@@ -1,5 +1,7 @@
 # PHP Tuner
 
+[![Release](https://github.com/muuvmuuv/PHP-Tuner/actions/workflows/release.yaml/badge.svg)](https://github.com/muuvmuuv/PHP-Tuner/actions/workflows/release.yaml)
+
 A CLI tool that analyzes your system and calculates optimal **FrankenPHP** or **PHP-FPM** configuration.
 
 ## Quick Start
@@ -58,7 +60,6 @@ php-tuner f -c > config.txt     # Export config only
 ```bash
 php-tuner fpm                           # Auto-detect
 php-tuner fpm --traffic high --pm static
-php-tuner fpm --apply --restart --yes   # Apply directly
 php-tuner fpm -c > www.conf             # Export config only
 ```
 
@@ -85,10 +86,6 @@ php-tuner fpm -c > www.conf             # Export config only
 | `--traffic <level>` | `low`, `medium`, `high` |
 | `--reserved <MB>` | Reserved memory for OS |
 | `--process-mem <MB>` | Override process memory |
-| `--apply` | Apply to config file |
-| `--config <path>` | Config file path |
-| `--restart` | Restart service after apply |
-| `-y, --yes` | Skip confirmation |
 
 ## Traffic Profiles
 
