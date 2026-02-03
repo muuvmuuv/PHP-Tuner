@@ -1,0 +1,71 @@
+version: 2
+
+project_name: php-tuner
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: php-tuner
+    main: ./cmd/php-tuner
+    binary: php-tuner
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - typo
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: "New Features"
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: "Bug Fixes"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: "Other"
+      order: 999
+
+release:
+  github:
+    owner: muuvmuuv
+    name: php-tuner
+  draft: false
+  prerelease: auto
+  mode: replace
+  footer: |
+    **Full Changelog**: https://github.com/muuvmuuv/php-tuner/compare/{{ .PreviousTag }}...{{ .Tag }}
+  name_template: "v{{.Version}}"

@@ -1,66 +1,45 @@
 # PHP Tuner
 
-binary_name := "php-tuner"
-build_dir := "dist"
+binary := "php-tuner"
 version := `git describe --tags --always --dirty 2>/dev/null || echo "dev"`
-ldflags := "-s -w -X main.version=" + version
 
-# Default recipe
 default: build
 
-# Build for current platform
 build:
-    @echo "Building {{binary_name}}..."
-    @mkdir -p {{build_dir}}
-    go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}} ./cmd/php-tuner
+    go build -ldflags "-s -w -X main.version={{version}}" -o dist/{{binary}} ./cmd/php-tuner
 
-# Build for all supported platforms
 build-all: clean
-    @echo "Building for all platforms..."
-    @mkdir -p {{build_dir}}
-    
-    @echo "  → linux/amd64"
-    GOOS=linux GOARCH=amd64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-linux-amd64 ./cmd/php-tuner
-    
-    @echo "  → linux/arm64"
-    GOOS=linux GOARCH=arm64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-linux-arm64 ./cmd/php-tuner
-    
-    @echo "  → darwin/amd64"
-    GOOS=darwin GOARCH=amd64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-darwin-amd64 ./cmd/php-tuner
-    
-    @echo "  → darwin/arm64"
-    GOOS=darwin GOARCH=arm64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-darwin-arm64 ./cmd/php-tuner
-    
-    @echo "Done!"
-    @ls -lh {{build_dir}}/
+    #!/usr/bin/env sh
+    for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+        os="${target%/*}"
+        arch="${target#*/}"
+        echo "Building ${os}/${arch}..."
+        GOOS=$os GOARCH=$arch go build -ldflags "-s -w -X main.version={{version}}" \
+            -o "dist/{{binary}}-${os}-${arch}" ./cmd/php-tuner
+    done
 
-# Remove build artifacts
 clean:
-    @echo "Cleaning..."
-    rm -rf {{build_dir}}
+    rm -rf dist
 
-# Run tests
 test:
     go test -v ./...
 
-# Build and run
 run *args: build
-    ./{{build_dir}}/{{binary_name}} {{args}}
+    ./dist/{{binary}} {{args}}
 
-# Install to /usr/local/bin
 install: build
-    @echo "Installing to /usr/local/bin/{{binary_name}}..."
-    sudo cp {{build_dir}}/{{binary_name}} /usr/local/bin/{{binary_name}}
-    @echo "Done!"
+    sudo cp dist/{{binary}} /usr/local/bin/{{binary}}
 
-# Format code
 fmt:
     go fmt ./...
 
-# Run linter
 lint:
     golangci-lint run
 
-# Show version that would be embedded
-version:
-    @echo {{version}}
+# Create release: just release 0.1.0
+release tag:
+    git tag -a "v{{tag}}" -m "Release v{{tag}}"
+    git push origin "v{{tag}}"
+
+release-dry:
+    goreleaser release --snapshot --clean

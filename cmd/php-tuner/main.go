@@ -43,22 +43,18 @@ USAGE:
     php-tuner <command> [options]
 
 COMMANDS:
-    frankenphp, f    Optimize FrankenPHP configuration (default)
-    php-fpm, fpm     Optimize PHP-FPM configuration
-    help             Show this help message
+    frankenphp, f    FrankenPHP configuration (default)
+    php-fpm, fpm     PHP-FPM configuration
+    help             Show this help
     version          Show version
 
 EXAMPLES:
     php-tuner                           # FrankenPHP (default)
-    php-tuner frankenphp                # FrankenPHP explicitly  
-    php-tuner f --traffic high          # FrankenPHP shorthand
-    php-tuner php-fpm                   # PHP-FPM
+    php-tuner f --traffic high          # High-traffic FrankenPHP
+    php-tuner fpm                       # PHP-FPM
     php-tuner fpm --apply --restart     # PHP-FPM with auto-apply
 
-Run 'php-tuner <command> --help' for more information on a command.
+Run 'php-tuner <command> --help' for command options.
 
-QUICK INSTALL:
-    curl -fsSL https://raw.githubusercontent.com/muuvmuuv/php-tuner/main/install.sh | sh
-
-For more information, visit: https://github.com/muuvmuuv/php-tuner`)
+https://github.com/muuvmuuv/php-tuner`)
 }
