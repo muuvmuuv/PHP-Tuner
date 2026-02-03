@@ -17,6 +17,7 @@ Or download a binary from the [releases page](https://github.com/php-fpm/optimiz
 - **All PM modes** - Supports `static`, `dynamic`, and `ondemand` configurations
 - **Traffic profiles** - Optimized recommendations for low, medium, and high traffic sites
 - **Smart defaults** - Automatically reserves memory for OS and other services
+- **Direct apply** - Apply changes directly to PHP-FPM config with `--apply`
 - **Config export** - Pipe configuration directly to a file with `--config-only`
 
 ## Usage
@@ -88,6 +89,10 @@ pm.max_requests = 500
 | `--traffic <level>` | Traffic profile: `low`, `medium`, `high` |
 | `--reserved <MB>` | Override reserved memory for OS/services |
 | `--process-mem <MB>` | Override detected PHP process memory |
+| `--apply` | Apply configuration directly to PHP-FPM config file |
+| `--config <path>` | Path to PHP-FPM pool config (default: auto-detect) |
+| `--restart` | Restart PHP-FPM service after applying |
+| `-y, --yes` | Skip confirmation prompts |
 
 ## Process Manager Types
 
@@ -142,6 +147,32 @@ just --list
 ```
 
 ## Applying Configuration
+
+### Automatic (Recommended)
+
+Use `--apply` to directly update your PHP-FPM configuration:
+
+```bash
+# Apply with confirmation prompt
+php-fpm-optimizer --apply
+
+# Apply and restart PHP-FPM
+php-fpm-optimizer --apply --restart
+
+# Skip confirmation (for scripts/automation)
+php-fpm-optimizer --apply --restart --yes
+
+# Apply to a specific config file
+php-fpm-optimizer --apply --config /etc/php/8.2/fpm/pool.d/www.conf
+```
+
+The tool will:
+1. Auto-detect your PHP-FPM pool configuration
+2. Create a backup (`.backup` file)
+3. Update only the PM-related settings
+4. Optionally restart PHP-FPM
+
+### Manual
 
 1. Copy the output to your PHP-FPM pool configuration:
    ```
