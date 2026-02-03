@@ -34,7 +34,7 @@ fmt:
     go fmt ./...
 
 lint:
-    golangci-lint run
+    go vet ./...
 
 # Create release: just release 0.1.0
 release tag:

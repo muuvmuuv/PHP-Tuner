@@ -7,7 +7,7 @@
 - `git commit`
 - `git push`
 - `git tag`
-- `just release`
+- `just release` (includes creating and pushing the tag)
 
 Approval is required **each time** - a single approval does not carry over to subsequent operations. Always wait for explicit confirmation before executing any of these commands.
 
@@ -46,5 +46,16 @@ internal/
 just build          # Build binary
 just run <args>     # Build and run
 just test           # Run tests
+just fmt            # Format code
+just lint           # Run linter
 just release <ver>  # Create release (requires approval)
 ```
+
+## Development Guidelines
+
+Always use justfile commands instead of raw tool invocations:
+
+- Use `just fmt` instead of `go fmt ./...` or `gofmt`
+- Use `just lint` instead of `go vet ./...`
+- Use `just test` instead of `go test`
+- Use `just build` instead of `go build`
