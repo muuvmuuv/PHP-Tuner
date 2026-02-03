@@ -1,6 +1,6 @@
-# PHP-FPM Optimizer
+# PHP Tuner
 
-binary_name := "php-fpm-optimizer"
+binary_name := "php-tuner"
 build_dir := "dist"
 version := `git describe --tags --always --dirty 2>/dev/null || echo "dev"`
 ldflags := "-s -w -X main.version=" + version
@@ -12,7 +12,7 @@ default: build
 build:
     @echo "Building {{binary_name}}..."
     @mkdir -p {{build_dir}}
-    go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}} ./cmd/php-fpm-optimizer
+    go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}} ./cmd/php-tuner
 
 # Build for all supported platforms
 build-all: clean
@@ -20,16 +20,16 @@ build-all: clean
     @mkdir -p {{build_dir}}
     
     @echo "  → linux/amd64"
-    GOOS=linux GOARCH=amd64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-linux-amd64 ./cmd/php-fpm-optimizer
+    GOOS=linux GOARCH=amd64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-linux-amd64 ./cmd/php-tuner
     
     @echo "  → linux/arm64"
-    GOOS=linux GOARCH=arm64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-linux-arm64 ./cmd/php-fpm-optimizer
+    GOOS=linux GOARCH=arm64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-linux-arm64 ./cmd/php-tuner
     
     @echo "  → darwin/amd64"
-    GOOS=darwin GOARCH=amd64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-darwin-amd64 ./cmd/php-fpm-optimizer
+    GOOS=darwin GOARCH=amd64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-darwin-amd64 ./cmd/php-tuner
     
     @echo "  → darwin/arm64"
-    GOOS=darwin GOARCH=arm64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-darwin-arm64 ./cmd/php-fpm-optimizer
+    GOOS=darwin GOARCH=arm64 go build -ldflags "{{ldflags}}" -o {{build_dir}}/{{binary_name}}-darwin-arm64 ./cmd/php-tuner
     
     @echo "Done!"
     @ls -lh {{build_dir}}/

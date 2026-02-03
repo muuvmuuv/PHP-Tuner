@@ -1,11 +1,11 @@
 #!/bin/sh
 set -e
 
-# PHP-FPM Optimizer Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/php-fpm/optimizer/main/install.sh | sh
+# PHP Tuner Installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/muuvmuuv/php-tuner/main/install.sh | sh
 
-REPO="php-fpm/optimizer"
-BINARY_NAME="php-fpm-optimizer"
+REPO="muuvmuuv/php-tuner"
+BINARY_NAME="php-tuner"
 INSTALL_DIR="/usr/local/bin"
 
 # Colors
@@ -112,7 +112,7 @@ verify() {
 
 main() {
     echo ""
-    printf "${CYAN}PHP-FPM Optimizer Installer${NC}\n"
+    printf "${CYAN}PHP Tuner Installer${NC}\n"
     echo "─────────────────────────────"
     echo ""
     

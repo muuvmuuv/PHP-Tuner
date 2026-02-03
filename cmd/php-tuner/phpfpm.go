@@ -6,19 +6,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/php-fpm/optimizer/internal/apply"
-	"github.com/php-fpm/optimizer/internal/calculator"
-	"github.com/php-fpm/optimizer/internal/output"
-	"github.com/php-fpm/optimizer/internal/php"
-	"github.com/php-fpm/optimizer/internal/system"
+	"github.com/muuvmuuv/php-tuner/internal/apply"
+	"github.com/muuvmuuv/php-tuner/internal/calculator"
+	"github.com/muuvmuuv/php-tuner/internal/output"
+	"github.com/muuvmuuv/php-tuner/internal/php"
+	"github.com/muuvmuuv/php-tuner/internal/system"
 )
 
-var version = "dev"
+func runPHPFPM(args []string) {
+	fs := flag.NewFlagSet("php-fpm", flag.ExitOnError)
 
-func main() {
-	// CLI flags
 	var (
-		showVersion    bool
 		showHelp       bool
 		noColor        bool
 		onlyConf       bool
@@ -32,34 +30,30 @@ func main() {
 		yes            bool
 	)
 
-	flag.BoolVar(&showVersion, "version", false, "Show version")
-	flag.BoolVar(&showVersion, "v", false, "Show version (shorthand)")
-	flag.BoolVar(&showHelp, "help", false, "Show help")
-	flag.BoolVar(&showHelp, "h", false, "Show help (shorthand)")
-	flag.BoolVar(&noColor, "no-color", false, "Disable colored output")
-	flag.BoolVar(&onlyConf, "config-only", false, "Output only the configuration (for piping)")
-	flag.BoolVar(&onlyConf, "c", false, "Output only the configuration (shorthand)")
-	flag.StringVar(&pmType, "pm", "", "Process manager type: static, dynamic, ondemand (default: auto)")
-	flag.StringVar(&trafficProfile, "traffic", "medium", "Traffic profile: low, medium, high")
-	flag.IntVar(&reservedMemory, "reserved", 0, "Reserved memory in MB for OS/services (default: auto)")
-	flag.Float64Var(&processMemory, "process-mem", 0, "Override PHP process memory in MB (default: auto-detect)")
-	flag.BoolVar(&applyConfig, "apply", false, "Apply configuration directly to PHP-FPM config file")
-	flag.StringVar(&configPath, "config", "", "Path to PHP-FPM pool config file (default: auto-detect)")
-	flag.BoolVar(&restart, "restart", false, "Restart PHP-FPM service after applying (use with --apply)")
-	flag.BoolVar(&yes, "yes", false, "Skip confirmation prompts (use with --apply)")
-	flag.BoolVar(&yes, "y", false, "Skip confirmation prompts (shorthand)")
+	fs.BoolVar(&showHelp, "help", false, "Show help message")
+	fs.BoolVar(&showHelp, "h", false, "Show help message (shorthand)")
+	fs.BoolVar(&noColor, "no-color", false, "Disable colored output")
+	fs.BoolVar(&onlyConf, "config-only", false, "Output only the configuration")
+	fs.BoolVar(&onlyConf, "c", false, "Output only the configuration (shorthand)")
+	fs.StringVar(&pmType, "pm", "", "Process manager: static, dynamic, ondemand")
+	fs.StringVar(&trafficProfile, "traffic", "medium", "Traffic profile: low, medium, high")
+	fs.IntVar(&reservedMemory, "reserved", 0, "Reserved memory in MB for OS/services")
+	fs.Float64Var(&processMemory, "process-mem", 0, "Override PHP process memory in MB")
+	fs.BoolVar(&applyConfig, "apply", false, "Apply configuration to PHP-FPM config file")
+	fs.StringVar(&configPath, "config", "", "Path to PHP-FPM pool config file")
+	fs.BoolVar(&restart, "restart", false, "Restart PHP-FPM service after applying")
+	fs.BoolVar(&yes, "yes", false, "Skip confirmation prompts")
+	fs.BoolVar(&yes, "y", false, "Skip confirmation prompts (shorthand)")
 
-	flag.Usage = printUsage
-	flag.Parse()
+	fs.Usage = func() { printPHPFPMUsage() }
 
-	if showHelp {
-		printUsage()
-		os.Exit(0)
+	if err := fs.Parse(args); err != nil {
+		os.Exit(1)
 	}
 
-	if showVersion {
-		fmt.Printf("php-fpm-optimizer %s\n", version)
-		os.Exit(0)
+	if showHelp {
+		printPHPFPMUsage()
+		return
 	}
 
 	// Initialize printer
@@ -134,7 +128,6 @@ func main() {
 }
 
 func applyConfiguration(cfg *calculator.Config, configPath string, restart, skipConfirm, noColor bool) error {
-	// Colors
 	green := "\033[32m"
 	yellow := "\033[33m"
 	cyan := "\033[36m"
@@ -153,7 +146,6 @@ func applyConfiguration(cfg *calculator.Config, configPath string, restart, skip
 		var err error
 		configPath, err = apply.FindConfigFile()
 		if err != nil {
-			// List what we searched for
 			fmt.Printf("%sSearched locations:%s\n", yellow, reset)
 			for _, path := range apply.ListConfigFiles() {
 				fmt.Printf("  - %s\n", path)
@@ -229,69 +221,57 @@ func applyConfiguration(cfg *calculator.Config, configPath string, restart, skip
 	return nil
 }
 
-func printUsage() {
-	fmt.Println(`PHP-FPM Process Manager Optimizer
+func printPHPFPMUsage() {
+	fmt.Println(`PHP-FPM Optimizer
 
-Analyzes your system and calculates optimal PHP-FPM pm configuration.
+Analyzes your system and calculates optimal PHP-FPM process manager configuration.
 
 USAGE:
-    php-fpm-optimizer [OPTIONS]
+    php-tuner php-fpm [options]
+    php-tuner fpm [options]
 
 OPTIONS:
-    -h, --help              Show this help message
-    -v, --version           Show version
-    -c, --config-only       Output only configuration (for piping to file)
-    --no-color              Disable colored output
+    -h, --help          Show this help message
+    -c, --config-only   Output only configuration (for piping to file)
+    --no-color          Disable colored output
 
-    --pm <type>             Process manager type: static, dynamic, ondemand
-                            Default: auto-selected based on traffic profile
+    --pm <type>         Process manager type: static, dynamic, ondemand
+                        Default: auto-selected based on traffic profile
 
-    --traffic <profile>     Expected traffic level: low, medium, high
-                            Default: medium
-                            - low: Uses ondemand PM (saves memory)
-                            - medium: Uses dynamic PM (balanced)
-                            - high: Uses static PM (fastest response)
+    --traffic <level>   Traffic profile: low, medium, high (default: medium)
+                        - low: Uses ondemand PM (saves memory)
+                        - medium: Uses dynamic PM (balanced)
+                        - high: Uses static PM (fastest response)
 
-    --reserved <MB>         Memory to reserve for OS/services in MB
-                            Default: auto-calculated (512MB + 15% of total)
+    --reserved <MB>     Memory to reserve for OS/services in MB
+                        Default: auto-calculated (512MB + 15% of total)
 
-    --process-mem <MB>      Override detected PHP process memory in MB
-                            Default: auto-detected from running processes
+    --process-mem <MB>  Override detected PHP process memory in MB
+                        Default: auto-detected from running processes
 
 APPLY OPTIONS:
-    --apply                 Apply configuration directly to PHP-FPM config file
-    --config <path>         Path to PHP-FPM pool config (default: auto-detect)
-    --restart               Restart PHP-FPM service after applying
-    -y, --yes               Skip confirmation prompts
+    --apply             Apply configuration directly to PHP-FPM config file
+    --config <path>     Path to PHP-FPM pool config (default: auto-detect)
+    --restart           Restart PHP-FPM service after applying
+    -y, --yes           Skip confirmation prompts
 
 EXAMPLES:
     # Auto-detect everything
-    php-fpm-optimizer
+    php-tuner php-fpm
 
     # High-traffic production server
-    php-fpm-optimizer --traffic high --pm static
+    php-tuner fpm --traffic high --pm static
 
-    # Low-memory VPS with light traffic
-    php-fpm-optimizer --traffic low --reserved 1024
+    # Apply configuration directly
+    php-tuner fpm --apply --restart --yes
 
-    # Export config directly to file
-    php-fpm-optimizer --config-only > /tmp/php-fpm-pm.conf
+    # Export config to file
+    php-tuner fpm --config-only > /tmp/php-fpm.conf
 
-    # Specify known process memory usage
-    php-fpm-optimizer --process-mem 64
+    # Specify known process memory
+    php-tuner fpm --process-mem 64
 
-    # Apply configuration directly (with confirmation)
-    php-fpm-optimizer --apply
-
-    # Apply and restart PHP-FPM (skip confirmation)
-    php-fpm-optimizer --apply --restart --yes
-
-    # Apply to specific config file
-    php-fpm-optimizer --apply --config /etc/php/8.2/fpm/pool.d/www.conf
-
-QUICK INSTALL:
-    curl -fsSL https://example.com/install.sh | sh
-
-For more information, visit: https://github.com/php-fpm/optimizer
-`)
+OUTPUT:
+    The configuration is output in PHP-FPM pool format, ready to be added
+    to your www.conf or custom pool configuration file.`)
 }

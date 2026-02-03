@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/php-fpm/optimizer/internal/calculator"
+	"github.com/muuvmuuv/php-tuner/internal/calculator"
 )
 
 // Common PHP-FPM pool configuration paths

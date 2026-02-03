@@ -1,20 +1,21 @@
-# PHP-FPM Optimizer
+# PHP Tuner
 
-A cross-platform CLI tool that analyzes your system and calculates optimal PHP-FPM process manager configuration.
+A cross-platform CLI tool that analyzes your system and calculates optimal **FrankenPHP** or **PHP-FPM** configuration.
 
 ## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/php-fpm/optimizer/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/muuvmuuv/php-tuner/main/install.sh | sh
 ```
 
-Or download a binary from the [releases page](https://github.com/php-fpm/optimizer/releases).
+Or download a binary from the [releases page](https://github.com/muuvmuuv/php-tuner/releases).
 
 ## Features
 
-- **Auto-detection** - Detects CPU cores, memory, and running PHP-FPM process memory usage
+- **Auto-detection** - Detects CPU cores, memory, and running PHP process memory usage
 - **Cross-platform** - Works on Linux (amd64/arm64) and macOS (Intel/Apple Silicon)
-- **All PM modes** - Supports `static`, `dynamic`, and `ondemand` configurations
+- **FrankenPHP support** - Optimized `num_threads` and worker configuration (default)
+- **PHP-FPM support** - All PM modes: `static`, `dynamic`, and `ondemand`
 - **Traffic profiles** - Optimized recommendations for low, medium, and high traffic sites
 - **Smart defaults** - Automatically reserves memory for OS and other services
 - **Direct apply** - Apply changes directly to PHP-FPM config with `--apply`
@@ -23,23 +24,93 @@ Or download a binary from the [releases page](https://github.com/php-fpm/optimiz
 ## Usage
 
 ```bash
-# Auto-detect everything (recommended for most users)
-php-fpm-optimizer
+php-tuner <command> [options]
+```
+
+### Commands
+
+| Command | Alias | Description |
+|---------|-------|-------------|
+| `frankenphp` | `f` | Optimize FrankenPHP configuration (default) |
+| `php-fpm` | `fpm` | Optimize PHP-FPM configuration |
+| `help` | | Show help message |
+| `version` | | Show version |
+
+### FrankenPHP (Default)
+
+```bash
+# Auto-detect everything (runs FrankenPHP by default)
+php-tuner
+
+# Explicit FrankenPHP
+php-tuner frankenphp
+
+# Using shorthand
+php-tuner f
+
+# High-traffic production
+php-tuner f --traffic high
+
+# Export config to file
+php-tuner f --config-only > Caddyfile.snippet
+```
+
+### PHP-FPM
+
+```bash
+# Auto-detect everything
+php-tuner php-fpm
+
+# Using shorthand
+php-tuner fpm
 
 # High-traffic production server
-php-fpm-optimizer --traffic high --pm static
+php-tuner fpm --traffic high --pm static
 
-# Low-memory VPS with light traffic  
-php-fpm-optimizer --traffic low
+# Apply configuration directly
+php-tuner fpm --apply --restart --yes
 
-# Export config directly to file
-php-fpm-optimizer --config-only > /tmp/php-fpm-pm.conf
-
-# Specify known process memory usage
-php-fpm-optimizer --process-mem 64
+# Export config to file
+php-tuner fpm --config-only > /tmp/php-fpm.conf
 ```
 
 ## Example Output
+
+### FrankenPHP
+
+```
+FrankenPHP Optimizer
+────────────────────────────────────────
+
+System Information
+
+  Platform             linux
+  CPU Cores            4
+  Total Memory         8192 MB
+
+Calculation
+
+  Reserved Memory      1076 MB (for OS/Caddy)
+  Available for PHP    7116 MB
+  Thread Memory        30.0 MB
+  Formula              7116 MB / 30.0 MB = 8 threads
+
+Recommended Configuration
+
+{
+    frankenphp {
+        num_threads 8
+        max_threads 16
+        max_wait_time 10s
+        worker {
+            file /path/to/your/public/index.php
+            num 8
+        }
+    }
+}
+```
+
+### PHP-FPM
 
 ```
 PHP-FPM Process Manager Optimizer
@@ -79,38 +150,69 @@ pm.max_requests = 500
 
 ## Options
 
+### FrankenPHP Options
+
+```
+php-tuner frankenphp [options]
+php-tuner f [options]
+```
+
 | Flag | Description |
 |------|-------------|
 | `-h, --help` | Show help message |
-| `-v, --version` | Show version |
-| `-c, --config-only` | Output only the configuration (for piping) |
+| `-c, --config-only` | Output only the configuration |
+| `--no-color` | Disable colored output |
+| `--traffic <level>` | Traffic profile: `low`, `medium`, `high` |
+| `--reserved <MB>` | Override reserved memory for OS/Caddy |
+| `--thread-mem <MB>` | Override estimated thread memory (default: 30MB) |
+| `--worker=false` | Disable worker mode |
+
+### PHP-FPM Options
+
+```
+php-tuner php-fpm [options]
+php-tuner fpm [options]
+```
+
+| Flag | Description |
+|------|-------------|
+| `-h, --help` | Show help message |
+| `-c, --config-only` | Output only the configuration |
 | `--no-color` | Disable colored output |
 | `--pm <type>` | Force PM type: `static`, `dynamic`, `ondemand` |
 | `--traffic <level>` | Traffic profile: `low`, `medium`, `high` |
 | `--reserved <MB>` | Override reserved memory for OS/services |
 | `--process-mem <MB>` | Override detected PHP process memory |
-| `--apply` | Apply configuration directly to PHP-FPM config file |
-| `--config <path>` | Path to PHP-FPM pool config (default: auto-detect) |
+| `--apply` | Apply configuration directly to config file |
+| `--config <path>` | Path to PHP-FPM pool config |
 | `--restart` | Restart PHP-FPM service after applying |
 | `-y, --yes` | Skip confirmation prompts |
 
-## Process Manager Types
-
-| Type | Best For | Behavior |
-|------|----------|----------|
-| `static` | High-traffic sites | Fixed number of workers always running |
-| `dynamic` | Most use cases | Workers scale between min/max based on demand |
-| `ondemand` | Low-traffic / shared hosting | Workers spawn on demand, killed when idle |
-
 ## Traffic Profiles
 
-- **low** - Selects `ondemand` PM, longer idle timeout. Best for admin panels, staging sites.
-- **medium** - Selects `dynamic` PM. Balanced for typical web applications.
-- **high** - Selects `static` PM, shorter idle timeout. Best for production sites with consistent traffic.
+| Profile | FrankenPHP | PHP-FPM |
+|---------|------------|---------|
+| `low` | Fewer threads, no wait timeout | `ondemand` PM, longer idle timeout |
+| `medium` | Balanced threads | `dynamic` PM |
+| `high` | More threads, strict timeouts | `static` PM |
 
 ## How It Works
 
-The optimizer uses the formula from [Tideways' PHP-FPM tuning guide](https://tideways.com/profiler/blog/an-introduction-to-php-fpm-tuning):
+### FrankenPHP
+
+FrankenPHP uses threads instead of processes, which share memory and are more efficient:
+
+```
+num_threads = min(CPU Cores × 2, Available Memory / Thread Memory)
+max_threads = CPU Cores × 4
+worker_num = num_threads (for worker mode)
+```
+
+Reserved memory: `256MB + 10% of total RAM` (capped at 2GB)
+
+### PHP-FPM
+
+Uses the formula from [Tideways' PHP-FPM tuning guide](https://tideways.com/profiler/blog/an-introduction-to-php-fpm-tuning):
 
 ```
 max_children = (Total RAM - Reserved Memory) / Average PHP Process Memory
@@ -119,90 +221,57 @@ min_spare_servers = CPU Cores × 2
 max_spare_servers = CPU Cores × 4
 ```
 
-Reserved memory is auto-calculated as: `512MB + 15% of total RAM` (capped at 4GB).
+Reserved memory: `512MB + 15% of total RAM` (capped at 4GB)
 
 ## Building from Source
 
 Requires Go 1.21+ and [just](https://github.com/casey/just)
 
 ```bash
-# Clone the repository
-git clone https://github.com/php-fpm/optimizer.git
-cd optimizer
+git clone https://github.com/muuvmuuv/php-tuner.git
+cd php-tuner
 
-# Build for current platform
-just build
-
-# Build for all platforms
-just build-all
-
-# Install to /usr/local/bin
-just install
-
-# Build and run with arguments
-just run --traffic high
-
-# List all available commands
-just --list
+just build        # Build for current platform
+just build-all    # Build for all platforms
+just install      # Install to /usr/local/bin
+just run f        # Build and run FrankenPHP
+just run fpm      # Build and run PHP-FPM
 ```
 
 ## Applying Configuration
 
-### Automatic (Recommended)
+### FrankenPHP
 
-Use `--apply` to directly update your PHP-FPM configuration:
+Add the output to your Caddyfile:
 
 ```bash
-# Apply with confirmation prompt
-php-fpm-optimizer --apply
+# Generate and append to Caddyfile
+php-tuner f --config-only >> /etc/frankenphp/Caddyfile
 
-# Apply and restart PHP-FPM
-php-fpm-optimizer --apply --restart
-
-# Skip confirmation (for scripts/automation)
-php-fpm-optimizer --apply --restart --yes
-
-# Apply to a specific config file
-php-fpm-optimizer --apply --config /etc/php/8.2/fpm/pool.d/www.conf
+# Reload
+frankenphp reload
 ```
 
-The tool will:
-1. Auto-detect your PHP-FPM pool configuration
-2. Create a backup (`.backup` file)
-3. Update only the PM-related settings
-4. Optionally restart PHP-FPM
+### PHP-FPM
 
-### Manual
+Use `--apply` for automatic configuration:
 
-1. Copy the output to your PHP-FPM pool configuration:
-   ```
-   /etc/php/8.x/fpm/pool.d/www.conf
-   ```
+```bash
+# Apply with confirmation
+php-tuner fpm --apply
 
-2. Restart PHP-FPM:
-   ```bash
-   sudo systemctl restart php-fpm
-   # or
-   sudo systemctl restart php8.3-fpm
-   ```
+# Apply and restart
+php-tuner fpm --apply --restart
 
-## Advanced: Multiple Pools
+# Skip confirmation (CI/automation)
+php-tuner fpm --apply --restart --yes
+```
 
-For applications with distinct frontend/backend traffic patterns, consider separate pools:
+Or manually copy to your pool config:
 
-```ini
-; /etc/php/8.x/fpm/pool.d/frontend.conf
-[frontend]
-listen = /var/run/php-fpm-frontend.sock
-pm = static
-pm.max_children = 50
-
-; /etc/php/8.x/fpm/pool.d/backend.conf  
-[backend]
-listen = /var/run/php-fpm-backend.sock
-pm = ondemand
-pm.max_children = 10
-pm.process_idle_timeout = 10s
+```bash
+php-tuner fpm --config-only >> /etc/php/8.x/fpm/pool.d/www.conf
+sudo systemctl restart php-fpm
 ```
 
 ## License
@@ -211,5 +280,6 @@ MIT
 
 ## References
 
+- [FrankenPHP Configuration](https://frankenphp.dev/docs/config/) - FrankenPHP Docs
 - [An Introduction to PHP-FPM Tuning](https://tideways.com/profiler/blog/an-introduction-to-php-fpm-tuning) - Tideways
 - [PHP-FPM Configuration](https://www.php.net/manual/en/install.fpm.configuration.php) - PHP Manual

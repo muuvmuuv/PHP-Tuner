@@ -3,8 +3,8 @@ package calculator
 import (
 	"math"
 
-	"github.com/php-fpm/optimizer/internal/php"
-	"github.com/php-fpm/optimizer/internal/system"
+	"github.com/muuvmuuv/php-tuner/internal/php"
+	"github.com/muuvmuuv/php-tuner/internal/system"
 )
 
 // PMType represents the process manager type

@@ -5,9 +5,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/php-fpm/optimizer/internal/calculator"
-	"github.com/php-fpm/optimizer/internal/php"
-	"github.com/php-fpm/optimizer/internal/system"
+	"github.com/muuvmuuv/php-tuner/internal/calculator"
+	"github.com/muuvmuuv/php-tuner/internal/php"
+	"github.com/muuvmuuv/php-tuner/internal/system"
 )
 
 // Colors for terminal output
@@ -172,6 +172,114 @@ func (p *Printer) PrintUsage() {
 	fmt.Fprintln(p.w)
 	fmt.Fprintln(p.w, "  2. Restart PHP-FPM:")
 	fmt.Fprintln(p.w, p.color(Dim, "     sudo systemctl restart php-fpm"))
+	fmt.Fprintln(p.w)
+}
+
+// PrintFrankenPHPHeader prints the FrankenPHP header
+func (p *Printer) PrintFrankenPHPHeader() {
+	if p.onlyConf {
+		return
+	}
+	fmt.Fprintln(p.w)
+	fmt.Fprintln(p.w, p.color(Bold+Cyan, "FrankenPHP Optimizer"))
+	fmt.Fprintln(p.w, p.color(Dim, strings.Repeat("─", 40)))
+	fmt.Fprintln(p.w)
+}
+
+// PrintFrankenPHPCalculation displays the FrankenPHP calculation summary
+func (p *Printer) PrintFrankenPHPCalculation(cfg *calculator.FrankenPHPConfig) {
+	if p.onlyConf {
+		return
+	}
+	fmt.Fprintln(p.w, p.color(Bold, "Calculation"))
+	fmt.Fprintln(p.w)
+
+	p.printRow("Reserved Memory", fmt.Sprintf("%d MB (for OS/Caddy)", cfg.ReservedMemoryMB))
+	p.printRow("Available for PHP", fmt.Sprintf("%d MB", cfg.AvailableMemoryMB))
+	p.printRow("Thread Memory", fmt.Sprintf("%.1f MB", cfg.ThreadMemoryMB))
+	p.printRow("Formula", fmt.Sprintf("%d MB / %.1f MB = %d threads",
+		cfg.AvailableMemoryMB, cfg.ThreadMemoryMB, cfg.NumThreads))
+	fmt.Fprintln(p.w)
+}
+
+// PrintFrankenPHPConfig displays the recommended FrankenPHP configuration
+func (p *Printer) PrintFrankenPHPConfig(cfg *calculator.FrankenPHPConfig, workerMode bool) {
+	if !p.onlyConf {
+		fmt.Fprintln(p.w, p.color(Bold+Green, "Recommended Configuration"))
+		fmt.Fprintln(p.w)
+	}
+
+	// Print Caddyfile format
+	fmt.Fprintln(p.w, "{")
+	fmt.Fprintln(p.w, "    frankenphp {")
+	fmt.Fprintf(p.w, "        num_threads %d\n", cfg.NumThreads)
+
+	if cfg.MaxThreads > cfg.NumThreads {
+		fmt.Fprintf(p.w, "        max_threads %d\n", cfg.MaxThreads)
+	}
+
+	if cfg.MaxWaitTime != "" {
+		fmt.Fprintf(p.w, "        max_wait_time %s\n", cfg.MaxWaitTime)
+	}
+
+	if workerMode && cfg.WorkerNum > 0 {
+		fmt.Fprintln(p.w, "        worker {")
+		fmt.Fprintln(p.w, "            file /path/to/your/public/index.php")
+		fmt.Fprintf(p.w, "            num %d\n", cfg.WorkerNum)
+		fmt.Fprintln(p.w, "        }")
+	}
+
+	fmt.Fprintln(p.w, "    }")
+	fmt.Fprintln(p.w, "}")
+
+	if !p.onlyConf {
+		fmt.Fprintln(p.w)
+	}
+}
+
+// PrintFrankenPHPWarnings displays FrankenPHP warnings
+func (p *Printer) PrintFrankenPHPWarnings(cfg *calculator.FrankenPHPConfig) {
+	if p.onlyConf || len(cfg.Warnings) == 0 {
+		return
+	}
+
+	fmt.Fprintln(p.w, p.color(Bold+Yellow, "Warnings"))
+	fmt.Fprintln(p.w)
+	for _, w := range cfg.Warnings {
+		fmt.Fprintf(p.w, "  %s %s\n", p.color(Yellow, "!"), w)
+	}
+	fmt.Fprintln(p.w)
+}
+
+// PrintFrankenPHPRecommendations displays FrankenPHP recommendations
+func (p *Printer) PrintFrankenPHPRecommendations(cfg *calculator.FrankenPHPConfig) {
+	if p.onlyConf || len(cfg.Recommendations) == 0 {
+		return
+	}
+
+	fmt.Fprintln(p.w, p.color(Bold+Blue, "Recommendations"))
+	fmt.Fprintln(p.w)
+	for _, r := range cfg.Recommendations {
+		fmt.Fprintf(p.w, "  %s %s\n", p.color(Cyan, "*"), r)
+	}
+	fmt.Fprintln(p.w)
+}
+
+// PrintFrankenPHPUsage displays how to apply FrankenPHP configuration
+func (p *Printer) PrintFrankenPHPUsage() {
+	if p.onlyConf {
+		return
+	}
+	fmt.Fprintln(p.w, p.color(Bold, "How to Apply"))
+	fmt.Fprintln(p.w)
+	fmt.Fprintln(p.w, "  1. Add the configuration to your Caddyfile:")
+	fmt.Fprintln(p.w, p.color(Dim, "     /etc/frankenphp/Caddyfile"))
+	fmt.Fprintln(p.w, p.color(Dim, "     or ./Caddyfile (current directory)"))
+	fmt.Fprintln(p.w)
+	fmt.Fprintln(p.w, "  2. Restart FrankenPHP:")
+	fmt.Fprintln(p.w, p.color(Dim, "     frankenphp reload"))
+	fmt.Fprintln(p.w, p.color(Dim, "     # or with Docker:"))
+	fmt.Fprintln(p.w, p.color(Dim, "     docker compose restart"))
 	fmt.Fprintln(p.w)
 }
 
