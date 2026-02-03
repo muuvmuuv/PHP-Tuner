@@ -6,17 +6,15 @@ A CLI tool that analyzes your system and calculates optimal **FrankenPHP** or **
 
 ## Quick Start
 
-Run directly without installing:
+```bash
+curl -fsSL https://raw.githubusercontent.com/muuvmuuv/php-tuner/main/install.sh | sh
+```
+
+Then run:
 
 ```bash
-# Linux (amd64)
-curl -fsSL https://github.com/muuvmuuv/php-tuner/releases/latest/download/php-tuner-linux-amd64.tar.gz | tar xz && ./php-tuner
-
-# Linux (arm64)
-curl -fsSL https://github.com/muuvmuuv/php-tuner/releases/latest/download/php-tuner-linux-arm64.tar.gz | tar xz && ./php-tuner
-
-# PHP-FPM instead of FrankenPHP
-./php-tuner fpm
+./php-tuner           # FrankenPHP (default)
+./php-tuner fpm       # PHP-FPM
 ```
 
 ## Usage
