@@ -38,7 +38,7 @@ lint:
 
 # Create release: just release 0.1.0
 release tag:
-    git tag -a "v{{tag}}" -m "Release v{{tag}}"
+    git tag -s "v{{tag}}" -m "Release v{{tag}}"
     git push origin "v{{tag}}"
 
 release-dry:
